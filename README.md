@@ -21,6 +21,5 @@ open in CellProfiler (this was created in CellProfiler v2.1.1);
 this was used to analyze maximum projections of fluorescence images (.tif) taken on a Leica microscope; parameters need to be adjusted to ensure proper segmentation
   
 MB_HSV_capsid_genome_analysis; 
-works with Fig5.cppipe output;
 Import into KNIME (this was created in KNIME v2.12.2); 
-this pipeline was used on the output from the CellProfiler pipeline;
+this pipeline works with Fig5.cppipe output from CellProfiler;
