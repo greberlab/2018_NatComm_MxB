@@ -1,0 +1,38 @@
+dir1 = getDirectory("Choose Source Directory ");
+dir2 = getDirectory("Choose Destination Directory ");
+list = getFileList(dir1);
+setBatchMode(true);
+//RED
+for (i=0; i<list.length; i++) {
+showProgress(i+1, list.length);
+filename = dir1 + list[i];
+if (endsWith(filename, "tif")) {
+open(filename);
+// INSERT MACRO HERE
+run("Split Channels");
+selectImage(3); // select your channel for the nuclear mask
+run("Duplicate...", "title=nuclei");
+setOption("BlackBackground", false);
+run("Make Binary");
+run("Convert to Mask");
+run("Close-");
+run("Fill Holes");
+run("Options...", "edm=32-bit");
+// Process>Binary>Options
+run("Distance Map");
+setThreshold(5.0, 99999.0);
+run("Find Maxima...", "noise=5 output=[Segmented Particles] above light");
+//"above" stands for "above lower threshold", "light" for "light background"
+run("Erode"); // this command may be repeated several times
+selectImage(2); // select your channel
+run("Duplicate...", "title=nuclear_proteinZ");
+selectWindow("EDM of nuclei Segmented");
+run("Set Measurements...", "area mean integrated display redirect=[nuclear_proteinZ] decimal=3");
+run("Analyze Particles...", "size=1750-Infinity pixel show=Outlines display");
+// adjust size accordingly
+saveAs("Jpeg", dir2+list[i]+"_nuclear_proteinZ.jpg");
+run("Close All");
+}
+}
+saveAs("Results_nuclear_proteinZ", dir2+"Results_nuclear_proteinZ.xls");
+run("Clear Results");

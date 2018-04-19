@@ -1,0 +1,74 @@
+dir1 = getDirectory("Choose Source Directory ");
+dir2 = getDirectory("Choose Destination Directory ");
+list = getFileList(dir1);
+setBatchMode(true);
+//RED
+for (i=0; i<list.length; i++) {
+showProgress(i+1, list.length);
+filename = dir1 + list[i];
+if (endsWith(filename, "tif")) {
+open(filename);
+// INSERT MACRO HERE
+run("Split Channels");
+selectImage(3); // select your channel for the nuclear mask
+run("Duplicate...", "title=nuclei");
+setOption("BlackBackground", false);
+run("Make Binary");
+run("Convert to Mask");
+run("Close-");
+run("Fill Holes");
+run("Options...", "edm=32-bit");
+// Process>Binary>Options
+run("Distance Map");
+setThreshold(5.0, 99999.0);
+run("Find Maxima...", "noise=5 output=[Segmented Particles] above light");
+// "above" stands for "above lower threshold", "light" for "light background"
+run("Dilate"); // This command may be repeated several times
+run("Watershed");
+selectImage(1); // select your first channel (proteinX)
+run("Duplicate...", "title=proteinX");
+selectWindow("EDM of nuclei Segmented");
+run("Set Measurements...", "area mean max min integrated display redirect=proteinX decimal=3");
+run("Analyze Particles...", "size=1750-Infinity pixel show=Outlines display");
+//adjust size accordingly
+saveAs("Jpeg", dir2+list[i]+"_nuclei.jpg");
+run("Close All");
+}
+}
+saveAs("Results_X", dir2+"Results_X.xls");
+run("Clear Results");
+run("Close All");
+
+for (i=0; i<list.length; i++) {
+showProgress(i+1, list.length);
+filename = dir1 + list[i];
+if (endsWith(filename, "tif")) {
+open(filename);
+// INSERT MACRO HERE
+run("Split Channels");
+selectImage(3); // select your channel for the nuclear mask
+run("Duplicate...", "title=nuclei");
+setOption("BlackBackground", false);
+run("Make Binary");
+run("Convert to Mask");
+run("Close-");
+run("Fill Holes");
+run("Options...", "edm=32-bit");
+// Process>Binary>Options
+run("Distance Map");
+setThreshold(5.0, 99999.0);
+run("Find Maxima...", "noise=5 output=[Segmented Particles] above light");
+//"above" stands for "above lower threshold", "light" for "light background"
+run("Dilate"); // This command may be repeated several times
+run("Watershed");
+selectImage(2); // select your second channel (proteinY)
+run("Duplicate...", "title=proteinY");
+selectWindow("EDM of nuclei Segmented");
+run("Set Measurements...", "area mean max min integrated display redirect=proteinY decimal=3");
+run("Analyze Particles...", "size=1750-Infinity pixel show=Outlines display");
+//adjust size accordingly
+run("Close All");
+}
+}
+saveAs("Results_Y", dir2+"Results_Y.xls");
+run("Clear Results");

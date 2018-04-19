@@ -1,0 +1,65 @@
+dir1 = getDirectory("Choose Source Directory ");
+dir2 = getDirectory("Choose Destination Directory ");
+list = getFileList(dir1);
+setBatchMode(true);
+for (i=0; i<list.length; i++) {
+showProgress(i+1, list.length);
+filename = dir1 + list[i];
+if (endsWith(filename, "tif")) {
+open(filename);
+run("Split Channels");
+selectImage(3); // select your channel for the cellular mask
+run("Duplicate...", "title=cells");
+setOption("BlackBackground", false);
+run("Make Binary");
+run("Convert to Mask");
+run("Close-");
+run("Fill Holes");
+run("Options...", "edm=32-bit");
+// Process>Binary>Options
+run("Distance Map");
+setThreshold(5.0, 99999.0);
+run("Find Maxima...", "noise=5 output=[Segmented Particles] above light");
+//"above" stands for "above lower threshold", "light" for "light background"
+run("Dilate");
+// this command may be repeated several times
+run("Watershed");
+// this command may be repeated several times
+selectImage(2); // select your channel where dots shall be counted
+run("Duplicate...", "title=dots");
+run("Set Measurements...", "area limit redirect=None decimal=5");
+setAutoThreshold("Default dark");
+// run("Threshold...") to find the optimal parameters
+setThreshold(60, 255);
+run("Convert to Mask");
+run("Watershed");
+run("Analyze Particles...", "size=2-Infinity pixel show=[Bare Outlines]");
+// adjust size according to your object size
+saveAs("Jpeg", dir2+list[i]+"dots_outlines.jpg");
+selectWindow("EDM of cells Segmented");
+run("Analyze Particles...", "size=1000-Infinity add");
+// adjust size according to the size of cells that should be considered
+selectWindow("EDM of cells Segmented");
+run("From ROI Manager");
+run("Show Overlay");
+run("Labels...", "color=red font=18 show draw");
+run("Flatten");
+saveAs("Jpeg", dir2+list[i]+"_CellMask.jpg");
+run("Close");
+id = getImageID();
+setAutoThreshold("Default");
+for (p=0 ; p<roiManager("count"); p++) {
+    selectImage("dots");
+    roiManager("select", p);
+    run("Analyze Particles...", "size=2-Infinity pixel summarize"); 
+//choose the same paramters as above
+}
+run("Close All");
+roiManager("Delete");
+roiManager("Deselect");
+roiManager("Delete");
+}
+}
+selectWindow("Summary");
+saveAs("Text", dir2+"Results_dots_per_CellMask.xls");
+run("Close");
